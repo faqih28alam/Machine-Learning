@@ -1,0 +1,90 @@
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score, f1_score
+
+from imblearn.over_sampling import SMOTE
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+
+# Load Dataset
+dataset = 'https://storage.googleapis.com/dqlab-dataset/data_misi_classification.csv'
+data_df = pd.read_csv(dataset)
+print(data_df.head())
+
+# encoding kolom-kolom binary / boolean termasuk kolom `sex` menjadi nilai 0 dan 1
+data_df.replace('f', 0, inplace=True)
+data_df.replace('t', 1, inplace=True)
+
+data_df.replace('M', 0, inplace=True) # male mapped to 0
+data_df.replace('F', 1, inplace=True) # female mapped to 1
+
+# impute missing variable dengan nilai 0
+data_df.replace(np.nan, 0, inplace=True)
+
+# labeling target variable dengan ketentuan sebagai berikut {'negative': 0, 'hypothyroid': 1, 'hyperthyroid': 2}
+diagnoses = {'negative': 0,
+             'hypothyroid': 1, 
+             'hyperthyroid': 2}
+data_df['target'] = data_df['target'].map(diagnoses)
+
+# pisahkan antara kolom variable dan target
+X = data_df.drop('target', axis=1).copy()
+y = data_df['target'].copy()
+
+# lakukan downsampling data sehingga class target mayoritas memiliki baris 30% dari jumlah data
+n_all = y.shape[0]
+classes = y.value_counts().shape[0]
+
+sample_per_class = int(round(n_all / classes, 0))
+major_sample = y[y == 0].sample(sample_per_class, random_state=42)
+other_sample = y[y != 0]
+
+sample_ind = major_sample.index.union(other_sample.index)
+
+X_resampled, y_resampled = X.loc[sample_ind], y.loc[sample_ind]
+print('Data Downsampling:',X_resampled.shape)
+print(y_resampled.value_counts())
+
+# lakukan sampling data sehingga class minoritas memiliki baris 30% dari jumlah data (gunakan library SMOTE)
+smote = SMOTE(random_state=42)
+
+# Melakukan oversampling dengan SMOTE
+X_resampled, y_resampled = smote.fit_resample(X_resampled, y_resampled)
+
+print('Data Training:',X.shape)
+print(y.value_counts())
+print('Data SMOTE:',X_resampled.shape)
+print(y_resampled.value_counts())
+
+# Kemudian lakukan train test split dengan ratio 0,75 dan 0,25 dan set random_state=0
+X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, random_state=0, test_size = 0.25)
+print('X training:',X_train.shape, 'y training:', y_train.shape)
+print('X testing:',X_test.shape, 'y testing:', y_test.shape)
+
+# Setelah displit, train dataset menggunakan algoritma SVM, DT dan Random Forest
+knn_mod = KNeighborsClassifier()
+knn_mod.fit(X_train, y_train)
+
+nb_mod = GaussianNB()
+nb_mod.fit(X_train, y_train)
+
+# Analisis performa tiap algorithma pada data train dengan melihat classification report dan metric performa
+print('------------- performa data train --------------')
+y_pred = knn_mod.predict(X_train)
+print('Report KNN:')
+print(classification_report(y_train, y_pred))
+
+y_pred = nb_mod.predict(X_train)
+print('Report NB:')
+print(classification_report(y_train, y_pred))
+
+# Analisis performa tiap algorithma pada data test dengan melihat classification report dan metric performa
+print('------------- performa data test --------------')
+y_pred = knn_mod.predict(X_test)
+print('Report KNN:')
+print(classification_report(y_test, y_pred))
+
+y_pred = nb_mod.predict(X_test)
+print('Report NB:')
+print(classification_report(y_test, y_pred))
