@@ -1,0 +1,34 @@
+from sklearn.datasets import load_iris
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Count the number of features in the dataset
+feature_number = len(X[0])
+# Create a PCA object using feature_number
+pca = PCA(n_components=feature_number)
+
+# Fit PCA with dataset
+pca.fit(X)
+
+# Get variance information
+variance_ratio = pca.explained_variance_ratio_
+
+# Calculate cummulative
+cumulative_variance = np.cumsum(variance_ratio)
+
+# Create Scree Plot
+plt.plot(range(1, len(variance_ratio) + 1), variance_ratio, marker='o')
+plt.xlabel('Komponen Utama ke-')
+plt.ylabel('Varians (Nilai Eigen)')
+plt.title('Scree Plot')
+plt.show()
+
+# Determine the number of features that can represent the entire dataset on the image that has been created
+n = 2
+print("Jumlah feature terpilih: {} telah mampu menangkap {}% dari keseragaman data.".format(n, round(cumulative_variance[n]*100,2)))
