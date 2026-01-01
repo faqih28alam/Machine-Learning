@@ -73,5 +73,17 @@ This repo is mostly for personal learning, but if you have suggestions or want t
 
 ---
 
+## 🛠️ Local Setup
+```text
+- git clone [https://github.com/yourusername/rps-classifier.git](https://github.com/yourusername/rps-classifier.git) # Clone Repository
+- python -m venv .venv              # Create Virtual Environment with .venv name on Powershell
+- .\.venv\Scripts\Activate.ps1      # Activate environmet on Powershell
+- deactivate                        # Deactivate environment on Powershell
+```
+
+---
+
 Let’s keep learning! 🚀
+
+
 
